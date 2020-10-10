@@ -1,4 +1,4 @@
-function best_result = expt_MTF(label_X,unlabeled_X,labeled_y,P_cell,Q_cell,TSK_cell,M,ulabeled_y)
+function best_result = expt_TMV_TSK(label_X,unlabeled_X,labeled_y,P_cell,Q_cell,TSK_cell,M,ulabeled_y)
 T = lab2vec(labeled_y);
 
 view_nums = size(label_X,2);

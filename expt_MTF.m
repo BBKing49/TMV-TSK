@@ -20,7 +20,7 @@ for l1 = 1:size(lma,2)
             options.lamda2 = lma(l2); 
             options.lamda3 = lma(l3); 
             options.lamda4 = aleta(a1); 
-            options.lamda6 = gama(g1); 
+            options.lamda5 = gama(g1); 
             options.view_nums = view_nums;
             
             result=zeros(folds_num,1);

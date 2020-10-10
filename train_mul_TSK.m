@@ -1,23 +1,20 @@
-function [TSK_cell, lamda_scale,P_cell,Q_cell] = train_mul_TSK( mulview_data_cell, ulabelX, P_cell, Q_cell, T, TSK_cell, options,uY)
-%ÊäÈë¶àÊÓ½ÇÊı¾İÔª×æ¼°Àà±ê£¬Êä³öÃ¿¸öÊÓ½ÇµÄTSKÄ£ĞÍ,TSK_cellÃ¿Ò»ĞĞÎªÒ»¸öÊÓ½ÇµÄÄ£ĞÍ£¬µÚÒ»ÁĞÎªpg£¬µÚ¶şÁĞÎªv£¬µÚÈıÁĞÎªb
+function [TSK_cell, lamda_scale,P_cell,Q_cell] = train_mul_TSK( mulview_data_cell, ulabelX, P_cell, Q_cell, T, TSK_cell, options)
+%è¾“å…¥å¤šè§†è§’æ•°æ®å…ƒç¥–åŠç±»æ ‡ï¼Œè¾“å‡ºæ¯ä¸ªè§†è§’çš„TSKæ¨¡å‹,TSK_cellæ¯ä¸€è¡Œä¸ºä¸€ä¸ªè§†è§’çš„æ¨¡å‹ï¼Œç¬¬ä¸€åˆ—ä¸ºpgï¼Œç¬¬äºŒåˆ—ä¸ºvï¼Œç¬¬ä¸‰åˆ—ä¸ºb
 view_nums = options.view_nums;
 lamda_scale = zeros(6,1);
 %T c*n
-c = size(T,2);  %Àà±ğÊı
-M = size( mulview_data_cell{1,1}, 1);   %±ê¼ÇÑù±¾Êı
-N = size(ulabelX{1,1},1);   %Î±±ê¼ÇÑù±¾Êı %¸Ä¹ı
-lamda1 = options.lamda1;    %ÕıÔò»¯ÏµÊı
-lamda2 = options.lamda2;    %Ğ­Í¬ÏîÏµÊı
-lamda3 = options.lamda3;    %È¨ÖµÏîÏµÊı
-lamda4 = options.lamda4;    %control the influences of unlabeled images
-lamda6 = options.lamda6;    %control thr influences of view consistency
+c = size(T,2);  %ç±»åˆ«æ•°
+M = size( mulview_data_cell{1,1}, 1);   %æ ‡è®°æ ·æœ¬æ•°
+N = size(ulabelX{1,1},1);   %ä¼ªæ ‡è®°æ ·æœ¬æ•° 
+lamda1 = options.lamda1;    
+lamda2 = options.lamda2;    
+lamda3 = options.lamda3;    
+lamda4 = options.lamda4;    
+lamda5 = options.lamda5;    
 maxIter = options.maxIter;
 
-%%Ë¼Â·£º¹Ì¶¨Ò»¸ö ¸üĞÂÆäËûÈı¸ö£¬ Ë³Ğòw£¬pg£¬p£¬q
-
-
 for i = 1:maxIter
-    %¼ÆËãÈ¨Öµ¸üĞÂÖĞµÄ·ÖÄ¸
+    %è®¡ç®—æƒå€¼æ›´æ–°ä¸­çš„åˆ†æ¯
     sum_weight = 0;
     for view_num = 1:view_nums
         p = P_cell{view_num};
@@ -31,11 +28,10 @@ for i = 1:maxIter
         temp_x = fromXtoZ(x,temp_v,temp_b);
         temp_ux = fromXtoZ(ux,temp_v,temp_b);
         sum_variance = (sum(temp_x * temp_pg - T ))*sum(temp_x * temp_pg - T)'+(lamda4)*(sum(temp_ux * temp_pg-p*q)*sum(temp_ux * temp_pg - p*q)');%11
-%         sum_variance = (sum(temp_x * temp_pg - T ))*sum(temp_x * temp_pg - T)'+(lamda4)*(sum(temp_ux * temp_pg- uY{view_num})*sum(temp_ux * temp_pg - uY{view_num})');
         sum_variance = exp(-lamda3*sum_variance);
         sum_weight = sum_weight+sum_variance;
     end
-    %¸üĞÂÈ¨Öµ¼°ºó¼şÊä³ö
+    %æ›´æ–°æƒå€¼åŠåä»¶è¾“å‡º
     for view_num = 1:view_nums
         p = P_cell{view_num};
         q = Q_cell{view_num};
@@ -49,13 +45,12 @@ for i = 1:maxIter
         ux = fromXtoZ(acc_ux,acc_v,acc_b);
         
         variance = ((sum(x * acc_pg - T))*sum(x * acc_pg - T)')+(lamda4)*(sum(ux * acc_pg - p*q)*sum(ux * acc_pg - p*q)');
-%         variance = ((sum(x * acc_pg - T))*sum(x * acc_pg - T)')+(lamda4)*(sum(ux * acc_pg - uY{view_num})*sum(ux * acc_pg - uY{view_num})');
         acc_w = exp(-lamda3*variance)/sum_weight;
         
         sum_y = zeros(M,c);
         sum_uy = zeros(N,c);
         sum_pq = zeros(N,c);
-        for j = 1:view_nums     %¼ÆËãy_cooperate
+        for j = 1:view_nums     %è®¡ç®—y_cooperate
             if j ~= view_num
                 model = TSK_cell{1,j};
                 temp_pg = model.pg;
@@ -81,10 +76,9 @@ for i = 1:maxIter
         uy_cooperate = sum_uy/(view_nums - 1);
         z = acc_w*(x)'*x+lamda4*acc_w*(ux)'*ux;
         acc_pg = pinv( z + lamda1 * eye( size( z)) +lamda2*((x)'*x + ux'*ux))*(acc_w*(x'*T+lamda4*ux'*p*q)+lamda2*(x'*y_cooperate + ux'*uy_cooperate));%10
-%         acc_pg = pinv( z + lamda1 * eye( size( z)) +lamda2*((x)'*x + ux'*ux))*(acc_w*(x'*T+lamda4*ux'*uY{view_num})+lamda2*(x'*y_cooperate + ux'*uy_cooperate));
         
-        %¸üĞÂP,Q
-        pq_cooperate = sum_pq;%¸Ä¶¯3.7
+        %æ›´æ–°P,Q
+        pq_cooperate = sum_pq;
 
         q = pinv( (lamda4*acc_w+2*lamda6)*p'*p)*( lamda4*acc_w*p'*((ux*acc_pg))+2*lamda6*p'*pq_cooperate);%k*k*k*n=k*n
 

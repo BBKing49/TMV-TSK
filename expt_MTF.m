@@ -1,4 +1,4 @@
-function best_result = expt_MTF1(label_X,unlabeled_X,labeled_y,P_cell,Q_cell,TSK_cell,M,ulabeled_y,Y_te)
+function best_result = expt_MTF(label_X,unlabeled_X,labeled_y,P_cell,Q_cell,TSK_cell,M,ulabeled_y)
 T = lab2vec(labeled_y);
 folds_num = 1;
 masks_te=cv_fold(folds_num,T);
@@ -27,7 +27,7 @@ for l1 = 1:size(lma,2)
             tic;
                  for fold_num=1:folds_num
                       
-                    [TSK_cell_t, lamda_scale,p,q] = train_mul_TSK( label_X , unlabeled_X, P_cell, Q_cell, T, TSK_cell, options,Y_te);
+                    [TSK_cell_t, lamda_scale,p,q] = train_mul_TSK( label_X , unlabeled_X, P_cell, Q_cell, T, TSK_cell, options);
                     t=toc;
                     [T_te] = test_mul_TSK( unlabeled_X ,TSK_cell_t, options.view_nums, M);
                     Y_te = vec2lab(T_te);

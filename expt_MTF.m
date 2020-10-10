@@ -30,11 +30,9 @@ for l1 = 1:size(lma,2)
                 [T_te] = test_mul_TSK( unlabeled_X ,TSK_cell_t, options.view_nums, M);
                 Y_te = vec2lab(T_te);
                 acc_te=sum(Y_te==ulabeled_y)/length(ulabeled_y);
-                result(fold_num,1)=acc_te;
                     
                 te_pq = p{1}*q{1}*TSK_cell_t{1}.w + p{2}*q{2}*TSK_cell_t{2}.w;
                 acc_pq = sum(vec2lab(te_pq)==ulabeled_y)/length(ulabeled_y);
-                result_pq(fold_num,1) = acc_pq;
              catch err
                    disp(err);
                        warning('Something wrong when using function pinv!');
@@ -44,16 +42,10 @@ for l1 = 1:size(lma,2)
                      best_result.acc_pq = acc_pq;
               end
               acc_te_mean = mean(result(:,1));
-              acc_te_std = std(result(:,1));
-              acc_te_min = min(result(:,1));
-              acc_te_max = max(result(:,1));
-              if acc_te_mean>best_acc_te
-                  best_acc_te = acc_te_mean;
+              if acc_te>best_acc_te
+                  best_acc_te = acc_te;
                   best_result.best_model = TSK_cell_t;
-                  best_result.mean = acc_te_mean;
-                  best_result.std = acc_te_std;
-                  best_result.min = acc_te_min;
-                  best_result.max = acc_te_max;
+                  best_result.mean = acc_te;
                   best_result.best_lamda_scale = lamda_scale;
                   best_result.time=t;
                   best_result.pred = Y_te;
